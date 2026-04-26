@@ -12,13 +12,13 @@ const app = express();
 // Middlewares
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static('.'));
 app.use('/clips', express.static('clips'));
 
 // Crear carpetas necesarias
 if (!fs.existsSync("clips")) fs.mkdirSync("clips");
 
-app.post('/generar-clips', async (req, res) => {
+app.post('https://mi-p-gina-web-co2b.onrender.com, async (req, res) => {
     const { url } = req.body;
     const idUnico = Date.now();
     const videoOriginal = `temp_${idUnico}.mp4`;
