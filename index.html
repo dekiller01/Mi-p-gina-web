@@ -13,9 +13,8 @@
         
         #loader { display: none; margin: 20px 0; color: #00f2ea; font-weight: bold; }
 
-        /* EL CONTENEDOR DEL VIDEO */
         .video-wrapper {
-            display: none; /* Se oculta hasta que el video esté listo */
+            display: none; 
             margin: 20px auto;
             width: 280px; 
             height: 500px; 
@@ -32,10 +31,10 @@
 
     <div class="container">
         <h1>TikTok Clip Maker</h1>
-        <input type="text" id="urlInput" placeholder="Pega el link de YouTube aquí">
+        <input type="text" id="urlInput" placeholder="Pega el link del video aquí">
         <button id="btnCrear" onclick="enviarAlServidor()">CREAR CLIP VERTICAL</button>
 
-        <div id="loader">⏳ Procesando en Termux...<br>Esto tarda unos 40 segundos.</div>
+        <div id="loader">⏳ Procesando en la nube...<br>Esto tarda unos 40-60 segundos.</div>
 
         <div id="videoWrapper" class="video-wrapper">
             <video id="reproductor" controls autoplay loop muted></video>
@@ -55,14 +54,14 @@
 
             if(!link) return alert("Pega un link primero");
 
-            // Reset y mostrar cargando
             btn.disabled = true;
             loader.style.display = "block";
             videoWrapper.style.display = "none";
             downloadBtn.style.display = "none";
 
             try {
-                const respuesta = await fetch('/generar-clips', {
+                // Dirección actualizada a tu servidor de Render
+                const respuesta = await fetch('https://mi-p-gina-web-co2b.onrender.com/generar-clips', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url: link })
@@ -71,19 +70,18 @@
                 const data = await respuesta.json();
 
                 if (data.success) {
-                    // LA CLAVE: Recargar el source del video
                     videoTag.src = data.videoUrl;
-                    videoTag.load(); // Forzar carga
+                    videoTag.load();
                     
                     loader.style.display = "none";
                     videoWrapper.style.display = "block";
                     downloadBtn.href = data.videoUrl;
                     downloadBtn.style.display = "inline-block";
                 } else {
-                    alert("Error: " + data.error);
+                    alert("Error en el servidor: " + data.error);
                 }
             } catch (err) {
-                alert("Error de conexión con Termux");
+                alert("No se pudo conectar con el servidor en Render. Asegúrate de que esté 'Live'.");
             } finally {
                 btn.disabled = false;
                 loader.style.display = "none";
@@ -92,4 +90,3 @@
     </script>
 </body>
 </html>
-
