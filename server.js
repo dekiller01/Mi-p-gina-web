@@ -1,13 +1,16 @@
 const express = require('express');
-const ytDlpx = require('yt-dlp-exec'); // <-- Herramienta para descargar en la nube
+const ytDlpx = require('yt-dlp-exec');
+const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg'); // Usamos el instalador local
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const cors = require('cors'); // <-- Importante para conectar con GitHub Pages
+const cors = require('cors');
+
+const ffmpegPath = ffmpegInstaller.path; // Ruta automática al ejecutable de ffmpeg
 const app = express();
 
 // Middlewares
-app.use(cors()); // Permite que tu web de GitHub hable con Render
+app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 app.use('/clips', express.static('clips'));
@@ -15,7 +18,7 @@ app.use('/clips', express.static('clips'));
 // Crear carpetas necesarias
 if (!fs.existsSync("clips")) fs.mkdirSync("clips");
 
-app.post('/generar-clips', async (req, res) => { // Añadimos 'async'
+app.post('/generar-clips', async (req, res) => {
     const { url } = req.body;
     const idUnico = Date.now();
     const videoOriginal = `temp_${idUnico}.mp4`;
@@ -25,7 +28,7 @@ app.post('/generar-clips', async (req, res) => { // Añadimos 'async'
     console.log(`🔗 Iniciando proceso para: ${url}`);
 
     try {
-        // 1. Descarga con yt-dlp-exec (forma segura para Render)
+        // 1. Descarga con yt-dlp-exec
         console.log("📥 Descargando...");
         await ytDlpx(url, {
             output: videoOriginal,
@@ -33,9 +36,11 @@ app.post('/generar-clips', async (req, res) => { // Añadimos 'async'
             noCheckCertificates: true
         });
 
-        // 2. Procesamiento FFmpeg
+        // 2. Procesamiento FFmpeg usando la ruta de ffmpegPath
         console.log("🎬 Renderizando estilo TikTok (720x1280)...");
-        const ffmpegCommand = `ffmpeg -y -ss 0 -t 10 -i ${videoOriginal} \
+        
+        // Usamos ${ffmpegPath} en lugar de solo 'ffmpeg'
+        const ffmpegCommand = `${ffmpegPath} -y -ss 0 -t 10 -i ${videoOriginal} \
         -filter_complex \
         "[0:v]scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280,boxblur=20:10[bg]; \
          [0:v]scale=720:-1[fg]; \
@@ -57,7 +62,7 @@ app.post('/generar-clips', async (req, res) => { // Añadimos 'async'
     }
 });
 
-const PORT = process.env.PORT || 3000; // Render usa puertos dinámicos
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 });
